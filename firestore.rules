@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User-specific data: only authenticated owner can read/write
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['progress', 'timestamp', 'score']);
+    }
+    
+    // Public election data: readable by everyone, writable by no one (admin SDK only)
+    match /public/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Rate limiting counters: only the Cloud Function (admin SDK) writes these
+    match /rateLimits/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ElectIQ — Your AI-powered guide to understanding Indian elections. Learn about Lok Sabha, Vidhan Sabha, EVM voting, voter registration with NVSP, and more.">
+  <meta name="theme-color" content="#1A56DB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>ElectIQ — Indian Election Process Assistant</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+  <!-- Google Fonts: DM Sans (body) + Fraunces (headings) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
+
+  <!-- DOMPurify CDN for input sanitization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" crossorigin="anonymous"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+
+  <!-- Firebase SDKs (compat for simplicity, modular tree-shaking via build step) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
+
+  <!-- Google Charts -->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+
+<body>
+  <!-- ═══ Skip Navigation (Accessibility) ═══ -->
+  <a href="#main-content" class="skip-link" id="skip-nav">
+    Skip to main content
+  </a>
+
+  <!-- ═══ Screen Reader Announcer (Accessibility) ═══ -->
+  <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true" role="status"></div>
+
+  <!-- ═══ Loading Skeleton ═══ -->
+  <div id="app-loader" class="app-loader" role="alert" aria-label="Loading ElectIQ application">
+    <div class="loader-content">
+      <div class="loader-logo">
+        <svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true">
+          <circle cx="24" cy="24" r="22" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="100 40" class="loader-spin"/>
+          <path d="M16 24l6 6 10-12" fill="none" stroke="var(--color-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="loader-title">ElectIQ</h1>
+      <p class="loader-subtitle">Preparing your election guide...</p>
+    </div>
+  </div>
+
+  <!-- ═══ App Shell ═══ -->
+  <div id="app" class="app" hidden>
+
+    <!-- ═══ HEADER / NAVIGATION ═══ -->
+    <header class="app-header" role="banner">
+      <div class="header-inner container">
+        <div class="header-brand">
+          <svg class="brand-logo" viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
+            <rect width="40" height="40" rx="10" fill="var(--color-primary)"/>
+            <path d="M12 20l6 6 10-12" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand-name">Elect<span class="brand-accent">IQ</span></span>
+        </div>
+
+        <nav class="header-nav" role="navigation" aria-label="Main navigation">
+          <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Toggle navigation menu">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+          </button>
+          <ul class="nav-menu" id="nav-menu" role="menubar">
+            <li role="none"><a href="#timeline" role="menuitem" class="nav-link active" data-section="timeline">
+              <svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 8.41l3.3 3.3-1.42 1.41L9.5 11.83V6h2v4.41z" fill="currentColor"/></svg>
+              Timeline
+            </a></li>
+            <li role="none"><a href="#learn" role="menuitem" class="nav-link" data-section="learn">
+              <svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+              Learn
+            </a></li>
+            <li role="none"><a href="#polling" role="menuitem" class="nav-link" data-section="polling">
+              <svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2C6.13 2 3 5.13 3 9c0 5.25 7 9 7 9s7-3.75 7-9c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="currentColor"/></svg>
+              Find Booth
+            </a></li>
+            <li role="none"><a href="#quiz" role="menuitem" class="nav-link" data-section="quiz">
+              <svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 13H9v-2h2v2zm1.07-7.75l-.9.92C10.45 8.9 10 9.5 10 11H8v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H5a4 4 0 118 0c0 .88-.36 1.68-.93 2.25z" fill="currentColor"/></svg>
+              Quiz
+            </a></li>
+            <li role="none"><a href="#charts" role="menuitem" class="nav-link" data-section="charts">
+              <svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3v14h14M7 13V9m4 4V5m4 8V7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Data
+            </a></li>
+          </ul>
+        </nav>
+
+        <div class="header-actions">
+          <language-switcher id="lang-switcher"></language-switcher>
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="theme-icon theme-icon--light" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.71a1 1 0 11-1.42-1.42l.71-.71zM17 10a1 1 0 110 2h-1a1 1 0 110-2h1zM14.22 14.22a1 1 0 011.42 0l.71.71a1 1 0 11-1.42 1.42l-.71-.71a1 1 0 010-1.42zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-1.78a1 1 0 010 1.42l-.71.71a1 1 0 11-1.42-1.42l.71-.71a1 1 0 011.42 0zM4 11a1 1 0 110-2H3a1 1 0 110 2h1zm1.78-6.22a1 1 0 010 1.42l-.71.71A1 1 0 113.65 5.5l.71-.71a1 1 0 011.42 0zM10 7a3 3 0 100 6 3 3 0 000-6z" fill="currentColor"/></svg>
+            <svg class="theme-icon theme-icon--dark" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.003 8.003 0 1010.586 10.586z" fill="currentColor"/></svg>
+          </button>
+          <button class="auth-btn" id="auth-btn" aria-label="Sign in to save progress">
+            <svg class="auth-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" fill="currentColor"/></svg>
+            <span class="auth-label">Sign In</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main id="main-content" class="app-main" role="main">
+
+      <!-- Hero Section -->
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero-content">
+            <div class="hero-badge" aria-hidden="true">🇮🇳 Powered by Google AI</div>
+            <h1 id="hero-title" class="hero-title">
+              Understand India's<br>
+              <span class="hero-gradient">Election Process</span>
+            </h1>
+            <p class="hero-description">
+              Your non-partisan AI guide to Lok Sabha, Vidhan Sabha & local elections.
+              Learn about voter registration, EVM voting, counting, and results — in simple language.
+            </p>
+            <div class="hero-actions">
+              <a href="#timeline" class="btn btn-primary btn-lg" id="hero-start-btn">
+                <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-1 11.5V6.5l5 3.5-5 3.5z" fill="currentColor"/></svg>
+                Start Learning
+              </a>
+              <button class="btn btn-outline btn-lg" id="hero-chat-btn" aria-label="Ask ElectIQ a question about Indian elections">
+                <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 4V5z" fill="currentColor"/></svg>
+                Ask ElectIQ
+              </button>
+            </div>
+
+            <!-- Deadline Countdown -->
+            <deadline-countdown id="deadline-countdown"></deadline-countdown>
+          </div>
+
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-graphic">
+              <div class="hero-circle hero-circle--1"></div>
+              <div class="hero-circle hero-circle--2"></div>
+              <div class="hero-circle hero-circle--3"></div>
+              <svg class="hero-ballot" viewBox="0 0 120 140" width="200" height="233">
+                <rect x="10" y="10" width="100" height="120" rx="8" fill="var(--color-surface-elevated)" stroke="var(--color-primary)" stroke-width="2"/>
+                <rect x="22" y="30" width="12" height="12" rx="2" fill="none" stroke="var(--color-primary)" stroke-width="2"/>
+                <rect x="22" y="52" width="12" height="12" rx="2" fill="none" stroke="var(--color-primary)" stroke-width="2"/>
+                <rect x="22" y="74" width="12" height="12" rx="2" fill="none" stroke="var(--color-accent)" stroke-width="2"/>
+                <path d="M24 78l3 3 5-6" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round"/>
+                <rect x="42" y="33" width="50" height="6" rx="3" fill="var(--color-primary-light)"/>
+                <rect x="42" y="55" width="40" height="6" rx="3" fill="var(--color-primary-light)"/>
+                <rect x="42" y="77" width="45" height="6" rx="3" fill="var(--color-accent-light)"/>
+                <rect x="22" y="96" width="76" height="20" rx="4" fill="var(--color-primary)"/>
+                <text x="60" y="110" text-anchor="middle" fill="white" font-size="10" font-family="DM Sans">VOTE ✓</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Progress Tracker -->
+      <section class="progress-section" id="progress-section" aria-labelledby="progress-title">
+        <div class="container">
+          <h2 id="progress-title" class="sr-only">Your Learning Progress</h2>
+          <progress-tracker id="progress-tracker"></progress-tracker>
+        </div>
+      </section>
+
+      <!-- Election Timeline Section -->
+      <section class="section" id="timeline" aria-labelledby="timeline-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="timeline-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">📋</span>
+              Indian Election Process
+            </h2>
+            <p class="section-subtitle">Follow the journey from announcement to results — step by step</p>
+          </div>
+          <election-timeline id="election-timeline"></election-timeline>
+        </div>
+      </section>
+
+      <!-- Learn / Deep Dive Section -->
+      <section class="section section--alt" id="learn" aria-labelledby="learn-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="learn-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">📚</span>
+              Deep Dive Topics
+            </h2>
+            <p class="section-subtitle">Explore specific topics about Indian elections</p>
+          </div>
+          <div class="topic-grid" role="list">
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="voter-id" aria-label="Learn about Voter ID and EPIC">
+              <div class="topic-card-icon" aria-hidden="true">🪪</div>
+              <h3 class="topic-card-title">Voter ID & EPIC</h3>
+              <p class="topic-card-desc">How to get your Voter ID card through NVSP portal</p>
+            </article>
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="evm-vvpat" aria-label="Learn about EVM and VVPAT voting machines">
+              <div class="topic-card-icon" aria-hidden="true">🗳️</div>
+              <h3 class="topic-card-title">EVM & VVPAT</h3>
+              <p class="topic-card-desc">How Electronic Voting Machines work in India</p>
+            </article>
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="election-types" aria-label="Learn about types of elections in India">
+              <div class="topic-card-icon" aria-hidden="true">🏛️</div>
+              <h3 class="topic-card-title">Types of Elections</h3>
+              <p class="topic-card-desc">Lok Sabha, Vidhan Sabha, Panchayat & Municipal</p>
+            </article>
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="model-code" aria-label="Learn about Model Code of Conduct">
+              <div class="topic-card-icon" aria-hidden="true">⚖️</div>
+              <h3 class="topic-card-title">Model Code of Conduct</h3>
+              <p class="topic-card-desc">Rules parties and candidates must follow during elections</p>
+            </article>
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="nota" aria-label="Learn about NOTA option">
+              <div class="topic-card-icon" aria-hidden="true">❌</div>
+              <h3 class="topic-card-title">NOTA Option</h3>
+              <p class="topic-card-desc">Your right to reject all candidates on the ballot</p>
+            </article>
+            <article class="topic-card" role="listitem" tabindex="0" data-topic="counting" aria-label="Learn about vote counting process">
+              <div class="topic-card-icon" aria-hidden="true">📊</div>
+              <h3 class="topic-card-title">Vote Counting</h3>
+              <p class="topic-card-desc">How EVM votes are counted and results declared</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Polling Locator Section -->
+      <section class="section" id="polling" aria-labelledby="polling-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="polling-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">📍</span>
+              Find Your Polling Booth
+            </h2>
+            <p class="section-subtitle">Enter your area details to locate your nearest polling station</p>
+          </div>
+          <polling-locator id="polling-locator"></polling-locator>
+        </div>
+      </section>
+
+      <!-- Quiz Section -->
+      <section class="section section--alt" id="quiz" aria-labelledby="quiz-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="quiz-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">🧠</span>
+              Test Your Knowledge
+            </h2>
+            <p class="section-subtitle">Quick quizzes to check what you've learned</p>
+          </div>
+          <quiz-module id="quiz-module"></quiz-module>
+        </div>
+      </section>
+
+      <!-- Charts / Data Visualization Section -->
+      <section class="section" id="charts" aria-labelledby="charts-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="charts-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">📈</span>
+              Election Data & Insights
+            </h2>
+            <p class="section-subtitle">Voter turnout trends, state-wise data, and election timelines</p>
+          </div>
+          <election-charts id="election-charts"></election-charts>
+        </div>
+      </section>
+
+      <!-- Resources Section -->
+      <section class="section section--alt" id="resources" aria-labelledby="resources-title">
+        <div class="container">
+          <div class="section-header">
+            <h2 id="resources-title" class="section-title">
+              <span class="section-icon" aria-hidden="true">🔗</span>
+              Official Resources
+            </h2>
+            <p class="section-subtitle">Trusted sources for election information</p>
+          </div>
+          <div class="resource-grid" role="list">
+            <a href="https://eci.gov.in" target="_blank" rel="noopener noreferrer" class="resource-card" role="listitem" id="resource-eci">
+              <span class="resource-card-title">Election Commission of India</span>
+              <span class="resource-card-url">eci.gov.in</span>
+            </a>
+            <a href="https://voters.eci.gov.in" target="_blank" rel="noopener noreferrer" class="resource-card" role="listitem" id="resource-nvsp">
+              <span class="resource-card-title">National Voters' Service Portal</span>
+              <span class="resource-card-url">voters.eci.gov.in</span>
+            </a>
+            <a href="https://results.eci.gov.in" target="_blank" rel="noopener noreferrer" class="resource-card" role="listitem" id="resource-results">
+              <span class="resource-card-title">Election Results</span>
+              <span class="resource-card-url">results.eci.gov.in</span>
+            </a>
+            <a href="https://ceodelhi.gov.in" target="_blank" rel="noopener noreferrer" class="resource-card" role="listitem" id="resource-ceo">
+              <span class="resource-card-title">Chief Electoral Officers</span>
+              <span class="resource-card-url">State CEO Websites</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ═══ CHAT ASSISTANT (Fixed Position) ═══ -->
+    <chat-assistant id="chat-assistant"></chat-assistant>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="app-footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-content">
+          <p class="footer-text">
+            <strong>ElectIQ</strong> is an educational tool powered by Google AI.
+            It is <strong>not affiliated</strong> with the Election Commission of India.
+          </p>
+          <p class="footer-disclaimer">
+            Always verify information with <a href="https://eci.gov.in" target="_blank" rel="noopener noreferrer">eci.gov.in</a>.
+            ElectIQ does not advocate for any political party or candidate.
+          </p>
+          <p class="footer-credits">
+            Built with Google Gemini, Firebase, Maps & Cloud Translation
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ═══ Auth Modal ═══ -->
+  <div class="modal-overlay" id="auth-modal" role="dialog" aria-labelledby="auth-modal-title" aria-modal="true" hidden>
+    <div class="modal-content" role="document">
+      <button class="modal-close" id="auth-modal-close" aria-label="Close sign-in dialog">&times;</button>
+      <h2 id="auth-modal-title" class="modal-title">Sign In to ElectIQ</h2>
+      <p class="modal-desc">Save your progress, quiz scores, and bookmarks across devices.</p>
+      <div class="modal-actions">
+        <button class="btn btn-google" id="google-signin-btn" aria-label="Sign in with Google">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Sign in with Google
+        </button>
+        <button class="btn btn-outline" id="anon-signin-btn" aria-label="Continue without signing in">
+          Continue as Guest
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Application Scripts ═══ -->
+  <script type="module" src="../src/app.js"></script>
+  <script>
+    // Fallback: show app if module fails to load
+    setTimeout(function() {
+      var loader = document.getElementById('app-loader');
+      var app = document.getElementById('app');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
+        if (app) app.hidden = false;
+      }
+    }, 3000);
+  </script>
+</body>
+</html>
