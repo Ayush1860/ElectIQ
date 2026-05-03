@@ -1,5 +1,15 @@
 # ElectIQ — Indian Election Process Assistant
 
+**Live App:** [https://electiq-148a8.web.app/](https://electiq-148a8.web.app/)
+
+**Note:** This project is a submission for **Prompt Wars** by **Hack2skill**.
+
+## Demo Video
+
+<video src="./public/assets/Recording%202026-05-03%20223228.mp4" controls="controls" width="100%" style="max-width: 800px;">
+  Your browser does not support the video tag.
+</video>
+
 > 🇮🇳 AI-powered, non-partisan guide to understanding Indian elections  
 > Built with Google Gemini, Firebase, Maps, Cloud Translation & Charts
 
