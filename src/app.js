@@ -24,6 +24,14 @@ import './components/ElectionCharts.js';
  * Initializes the entire ElectIQ application.
  */
 async function initApp() {
+  // Always setup UI first so the app is interactive even if backend fails
+  initSkipNav();
+  setupDarkMode();
+  setupNavigation();
+  setupAuthModal();
+  setupTopicCards();
+  setupResourceTracking();
+
   try {
     // ── 1. Initialize Firebase ──
     const { analytics } = await initFirebase();
@@ -32,47 +40,23 @@ async function initApp() {
     // ── 2. Sign in anonymously by default ──
     await signInAnonymously();
 
-    // ── 3. Initialize accessibility features ──
-    initSkipNav();
-
-    // ── 4. Setup dark mode ──
-    setupDarkMode();
-
-    // ── 5. Setup navigation ──
-    setupNavigation();
-
-    // ── 6. Setup auth modal ──
-    setupAuthModal();
-
-    // ── 7. Setup topic cards ──
-    setupTopicCards();
-
-    // ── 8. Setup resource link tracking ──
-    setupResourceTracking();
-
-    // ── 9. Hide loader, show app ──
-    const loader = document.getElementById('app-loader');
-    const app = document.getElementById('app');
-    if (loader) loader.classList.add('hidden');
-    if (app) app.hidden = false;
-
-    // Remove loader after animation
-    setTimeout(() => { if (loader) loader.remove(); }, 500);
-
-    // ── 10. Register Service Worker ──
-    registerServiceWorker();
-
-    // ── 11. Listen for auth state changes ──
+    // ── 3. Listen for auth state changes ──
     onAuthStateChanged(updateAuthUI);
 
-    announceToScreenReader('ElectIQ is ready. Welcome to your election guide.');
+    // ── 4. Register Service Worker ──
+    registerServiceWorker();
 
+    announceToScreenReader('ElectIQ is ready. Welcome to your election guide.');
   } catch (error) {
     console.error('[ElectIQ] Init failed:', error);
+  } finally {
     // Show app anyway with degraded functionality
     const loader = document.getElementById('app-loader');
     const app = document.getElementById('app');
-    if (loader) loader.classList.add('hidden');
+    if (loader) {
+      loader.classList.add('hidden');
+      setTimeout(() => loader.remove(), 500);
+    }
     if (app) app.hidden = false;
   }
 }
